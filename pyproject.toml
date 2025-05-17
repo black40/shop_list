@@ -35,3 +35,6 @@ exclude = [
     "dist",
     ".venv"
 ]
+
+[tool.ruff.format]
+quote-style = "single"

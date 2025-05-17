@@ -13,4 +13,6 @@ format:
 check:
 	poetry run ruff check $(SRC_DIR)
 
-.PHONY: run format check
+all: clean check format run
+
+.PHONY: run format check all
