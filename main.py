@@ -10,7 +10,7 @@ class Root(MDScreen):
 
 
 class ShopList(MDApp):
-    def build(self):
+    def build(self) -> Root:
         self.title = 'Shopping'
         return Root()
 

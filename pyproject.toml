@@ -19,6 +19,7 @@ packages = [{include = "shop_list", from = "src"}]
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
+mypy = "^1.15.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -38,3 +39,7 @@ exclude = [
 
 [tool.ruff.format]
 quote-style = "single"
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
