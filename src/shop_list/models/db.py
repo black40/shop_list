@@ -1,30 +1,53 @@
 import sqlite3
-import logging
+from typing import Any, Optional
 from config import logger
 
 
 class Database:
-    def __init__(self, db_path):
-        self.db_path = db_path
-        self.connection = None
+    """
+    Класс для работы с SQLite-базой данных.
+    """
 
-    def _connect(self):
+    def __init__(self, db_path: str):
+        """
+        :param db_path: Путь к файлу базы данных.
+        """
+        self.db_path: str = db_path
+        self.connection: Optional[sqlite3.Connection] = None
+
+    def _connect(self) -> None:
+        """Устанавливает соединение с базой данных, если оно ещё не установлено."""
         if self.connection is None:
             try:
                 self.connection = sqlite3.connect(self.db_path)
             except Exception as e:
-                print(f'Error connecting to database: {e}')
+                logger.error(f'Error connecting to database: {e}')
 
-    def close_connection(self):
-        if self.connection:
+    def close_connection(self) -> None:
+        """Закрывает соединение с базой данных."""
+        if self.connection is not None:
             try:
                 self.connection.close()
-                self.connection = None
             except Exception as e:
-                logging.error(f'Error closing database -- {e}')
+                logger.error(f'Error closing database: {e}')
+            finally:
+                self.connection = None
 
-    def execute_query(self, query, params, commit=True):
+    def execute_query(
+        self, query: str, params: tuple[Any, ...] = (), commit: bool = True
+    ) -> list[Any]:
+        """
+        Выполняет SQL-запрос с параметрами.
+
+        :param query: SQL-запрос.
+        :param params: Параметры для запроса.
+        :param commit: Нужно ли делать commit (по умолчанию True).
+        :return: Результат выборки (fetchall) или пустой список при ошибке.
+        """
         self._connect()
+        if self.connection is None:
+            logger.error("No database connection.")
+            return []
         try:
             cursor = self.connection.cursor()
             try:
@@ -33,42 +56,78 @@ class Database:
                     self.connection.commit()
                 return cursor.fetchall()
             finally:
-                if 'cursor' in locals() and cursor:
-                    cursor.close()
+                cursor.close()
         except sqlite3.Error as e:
-            logging.error(f'Database error: {e}')
+            logger.error(f'Database error: {e}')
             return []
         except Exception as e:
-            print(
+            logger.error(
                 f'Unexpected error while executing query: {query} with params: {params}. Error: {e}'
             )
             return []
 
-    def get_all_items(self):
+    def get_all_items(self, query: str) -> list[Any]:
+        """
+        Выполняет SELECT-запрос без параметров и возвращает все строки.
+
+        :param query: SQL-запрос SELECT.
+        :return: Список строк результата.
+        """
+        self._connect()
+        if self.connection is None:
+            logger.error("No database connection.")
+            return []
         try:
-            with self.connection.cursor() as cursor:
-                cursor.execute('SELECT id, name, bought FROM items')
+            cursor = self.connection.cursor()
+            try:
+                params: tuple[Any, ...] = ()
+                cursor.execute(query, params)
                 return cursor.fetchall()
-            return cursor.fetchall()
+            finally:
+                cursor.close()
         except sqlite3.Error as e:
-            print(f'Database error: {e}')
+            logger.error(f'Database error: {e}')
             return []
         except Exception as e:
-            print(f'Unexpected error: {e}')
+            logger.error(f'Unexpected error: {e}')
             return []
 
-    def __enter__(self):
-        try:
-            self._connect()
-        except Exception as e:
-            logging.error(f'Error during __enter__: {e}')
+    def fetch_one(self, query: str, params: tuple[Any, ...] = ()) -> Optional[Any]:
+        """
+        Выполняет SELECT-запрос и возвращает одну строку.
 
-    def __exit__(self, exc_type, exc_value, traceback):
+        :param query: SQL-запрос SELECT.
+        :param params: Параметры для запроса.
+        :return: Одна строка результата или None.
+        """
+        self._connect()
+        if self.connection is None:
+            logger.error("No database connection.")
+            return None
         try:
-            self.close_connection()
+            cursor = self.connection.cursor()
+            try:
+                cursor.execute(query, params)
+                return cursor.fetchone()
+            finally:
+                cursor.close()
+        except sqlite3.Error as e:
+            logger.error(f'Database error: {e}')
+            return None
         except Exception as e:
-            logging.error(f'Error during __exit__ cleanup: {e}')
+            logger.error(f'Unexpected error: {e}')
+            return None
+
+    def is_connected(self) -> bool:
+        """Проверяет, открыто ли соединение с базой данных."""
+        return self.connection is not None
+
+    def __enter__(self) -> "Database":
+        self._connect()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        self.close_connection()
+
+    def __del__(self) -> None:
         self.close_connection()
