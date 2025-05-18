@@ -4,7 +4,7 @@ APP_FILE=main.py
 clean:
 	find . -type d -name __pycache__ -exec rm -r {} +
 
-run: clean
+run:	clean
 	poetry run python $(APP_FILE)
 
 format:
@@ -15,4 +15,7 @@ check:
 
 all: clean check format run
 
-.PHONY: run format check all
+typecheck:
+	poetry run mypy $(SRC_DIR)
+
+.PHONY: run format check all typecheck
