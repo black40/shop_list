@@ -13,9 +13,12 @@ format:
 check:
 	poetry run ruff check $(SRC_DIR)
 
-all: clean check format run
+fix:
+	poetry run ruff  check --fix $(SRC_DIR)
 
 typecheck:
 	poetry run mypy $(SRC_DIR)
 
-.PHONY: run format check all typecheck
+verify: clean format fix check typecheck run
+
+.PHONY: run format check all typecheck fix verify

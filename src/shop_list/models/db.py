@@ -46,7 +46,7 @@ class Database:
         """
         self._connect()
         if self.connection is None:
-            logger.error("No database connection.")
+            logger.error('No database connection.')
             return []
         try:
             cursor = self.connection.cursor()
@@ -75,7 +75,7 @@ class Database:
         """
         self._connect()
         if self.connection is None:
-            logger.error("No database connection.")
+            logger.error('No database connection.')
             return []
         try:
             cursor = self.connection.cursor()
@@ -102,7 +102,7 @@ class Database:
         """
         self._connect()
         if self.connection is None:
-            logger.error("No database connection.")
+            logger.error('No database connection.')
             return None
         try:
             cursor = self.connection.cursor()
@@ -122,7 +122,7 @@ class Database:
         """Проверяет, открыто ли соединение с базой данных."""
         return self.connection is not None
 
-    def __enter__(self) -> "Database":
+    def __enter__(self) -> 'Database':
         self._connect()
         return self
 
