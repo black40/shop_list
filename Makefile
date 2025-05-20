@@ -21,4 +21,22 @@ typecheck:
 
 verify: clean format fix check typecheck run
 
-.PHONY: run format check all typecheck fix verify
+install:
+	poetry install
+
+test:
+	poetry run pytest
+
+help:
+	@echo "Доступные цели:"
+	@echo "  clean      — удалить __pycache__"
+	@echo "  run        — запустить приложение"
+	@echo "  format     — автоформатирование кода"
+	@echo "  check      — проверка стиля кода"
+	@echo "  fix        — автоисправление стиля кода"
+	@echo "  typecheck  — проверка типов mypy"
+	@echo "  verify     — все проверки и запуск"
+	@echo "  install    — установка зависимостей"
+	@echo "  test       — запуск тестов"
+
+.PHONY: run clean format check fix typecheck verify install test help
