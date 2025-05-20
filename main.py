@@ -1,17 +1,140 @@
+import os
 import kivy
+from kivy.lang import Builder
+from kivy.utils import get_color_from_hex
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
+from kivymd.uix.button import MDIconButton
+from kivymd.uix.button import MDFlatButton
+from kivymd.uix.selectioncontrol import MDCheckbox
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.textfield import MDTextField
+
+from config import logger
+from config import DB_FULL_PATH as DB_PATH
+from src.shop_list.models.db import Database
+
 
 kivy.require('2.3.1')
 
 
+class ItemRow(MDBoxLayout):
+    def __init__(self, item_id, name, bought, db, refresh_callback, **kwargs):
+        super().__init__(orientation='horizontal', size_hint_y=None, height='48dp', **kwargs)
+        self.item_id = item_id
+        self.name = name
+        self.bought = bought
+        self.db = db
+        self.refresh_callback = refresh_callback
+
+        self.checkbox = MDCheckbox(active=bool(bought))
+        self.checkbox.bind(active=self.toggle_bought)
+
+        self.label = MDLabel(text=name, halign='left')
+
+        self.edit_button = MDIconButton(
+            icon='pencil',
+            theme_text_color='Primary',
+            text_color=get_color_from_hex('#1976D2'),
+            on_release=self.show_edit_dialog,
+        )
+
+        self.delete_button = MDIconButton(
+            icon='delete', theme_text_color='Secondary', on_release=self.delete_item
+        )
+
+        self.add_widget(self.checkbox)
+        self.add_widget(self.label)
+        self.add_widget(self.edit_button)
+        self.add_widget(self.delete_button)
+
+    def toggle_bought(self, checkbox, value):
+        self.db.toggle_item(self.item_id, int(value))
+        self.refresh_callback()
+
+    def delete_item(self, *args):
+        self.db.delete_item(self.item_id)
+        self.refresh_callback()
+
+    def show_edit_dialog(self, *args):
+        self.text_field = MDTextField(text=self.name)
+        self.dialog = MDDialog(
+            title='Редактировать',
+            type='custom',
+            content_cls=self.text_field,
+            buttons=[
+                MDFlatButton(text='Отмена', on_release=lambda x: self.dialog.dismiss()),
+                MDFlatButton(text='Сохранить', on_release=self.save_edit),
+            ],
+        )
+        self.dialog.open()
+
+    def save_edit(self, *args):
+        new_name = self.text_field.text.strip()
+        if new_name:
+            self.db.update_item(self.item_id, new_name)
+            self.dialog.dismiss()
+            self.refresh_callback()
+
+
 class Root(MDScreen):
-    pass
+    def __init__(self, *args, **kwargs):
+        logger.info('Ініціалізація головного екрану')
+
+        if not os.path.exists(DB_PATH):
+            logger.warning(f'Базу даних не знайдено за шляхом: {DB_PATH}')
+            # За бажанням: створити або ініціалізувати нову БД тут
+        else:
+            logger.info(f'Базу даних знайдено: {DB_PATH}')
+
+        self.db = Database(DB_PATH)
+        super().__init__(*args, **kwargs)
+        self.dialog = None
+
+    def show_add_dialog(self):
+        if self.dialog is None:
+            self.text_field = MDTextField(hint_text='product')
+            self.dialog = MDDialog(
+                title='Add product',
+                type='custom',
+                content_cls=self.text_field,
+                buttons=[
+                    MDFlatButton(text='Cancel', on_release=lambda x: self.dialog.dismiss()),
+                    MDFlatButton(text='Ok', on_release=self.save_item),
+                ],
+            )
+        self.text_field.text = ''
+        self.dialog.open()
+        logger.debug('Діалог додавання відкрито')
+
+    def save_item(self, *args):
+        logger.debug('Збереження елемента')
+        name = self.text_field.text.strip()
+        if name:
+            self.db.execute_query(name)
+            self.dialog.dismiss()
+            self.refresh_items()
+
+    def refresh_items(self):
+        self.ids.item_list.clear_widgets()
+        items = self.db.get_all_items()
+        for item in items:
+            item_id, name, *rest = item
+            bought = rest[0] if rest else 0
+            row = ItemRow(item_id, name, bought, self.db, refresh_callback=self.refresh_items)
+            self.ids.item_list.add_widget(row)
+
+    def toggle_theme(self):
+        logger.debug('Зміна теми (ще не реалізовано)')
+        pass
 
 
 class ShopList(MDApp):
     def build(self) -> Root:
         self.title = 'Shopping'
+        Builder.load_file('src/shop_list/views/ui.kv')
         return Root()
 
 

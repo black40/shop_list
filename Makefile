@@ -17,7 +17,7 @@ fix:
 	poetry run ruff  check --fix $(SRC_DIR)
 
 typecheck:
-	poetry run mypy $(SRC_DIR)
+	poetry run mypy src/
 
 verify: clean format fix check typecheck run
 

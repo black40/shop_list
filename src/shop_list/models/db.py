@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from typing import Any, Optional
 from config import logger
@@ -12,6 +13,8 @@ class Database:
         """
         :param db_path: Путь к файлу базы данных.
         """
+        # Создаём каталог для базы, если его нет
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.db_path: str = db_path
         self.connection: Optional[sqlite3.Connection] = None
 
