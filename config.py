@@ -10,10 +10,15 @@ if DB_NAME is None or DB_PATH is None:
     raise ValueError('DB_NAME and DB_PATH environment variables must be set')
 DB_FULL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), DB_PATH, DB_NAME))
 
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filename='shop_list.log',
-    filemode='w',
-)
-logger = logging.getLogger('shop_list')
+LOG_FILE_NAME = 'logs.log'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+handler = logging.FileHandler(LOG_FILE_NAME, mode='w', encoding='utf-8')
+handler.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s::%(levelname)s::%(message)s')
+
+handler.setFormatter(formatter)
+logger.addHandler(handler)
