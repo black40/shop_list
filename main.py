@@ -13,11 +13,14 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.textfield import MDTextField
 
 from config import logger
-from config import DB_FULL_PATH as DB_PATH
+from config import DB_FULL_PATH
 from src.shop_list.models.db import Database
-
+from src.shop_list.models.sql_utils import load_queries
 
 kivy.require('2.3.1')
+
+
+QUERIES = load_queries('src/shop_list/models/qeuries.sql')
 
 
 class ItemRow(MDBoxLayout):
@@ -83,13 +86,13 @@ class Root(MDScreen):
     def __init__(self, *args, **kwargs):
         logger.info('Ініціалізація головного екрану')
 
-        if not os.path.exists(DB_PATH):
-            logger.warning(f'Базу даних не знайдено за шляхом: {DB_PATH}')
+        if not os.path.exists(DB_FULL_PATH):
+            logger.warning(f'Базу даних не знайдено за шляхом: {DB_FULL_PATH}')
             # За бажанням: створити або ініціалізувати нову БД тут
         else:
-            logger.info(f'Базу даних знайдено: {DB_PATH}')
+            logger.info(f'Базу даних знайдено: {DB_FULL_PATH}')
 
-        self.db = Database(DB_PATH)
+        self.db = Database(DB_FULL_PATH)
         super().__init__(*args, **kwargs)
         self.dialog = None
 
@@ -127,13 +130,22 @@ class Root(MDScreen):
             self.ids.item_list.add_widget(row)
 
     def toggle_theme(self):
-        logger.debug('Зміна теми (ще не реалізовано)')
-        pass
+        new_theme = 'Dark' if self.theme_cls.theme_style == 'Light' else 'Light'
+        new_palette = 'DeepPurple' if new_theme == 'Dark' else 'Blue'
+
+        self.theme_cls.theme_style = new_theme
+        self.theme_cls.primary_palette = new_palette
+
+        self.bg_color = self.get_bg_color()
+
+    def get_bg_color(self):
+        return (0.95, 0.95, 1, 1) if self.theme_cls.theme_style == 'Light' else (0.1, 0.1, 0.1, 1)
 
 
 class ShopList(MDApp):
     def build(self) -> Root:
         self.title = 'Shopping'
+        logger.info('Загружаю файл .kv')
         Builder.load_file('src/shop_list/views/ui.kv')
         return Root()
 
