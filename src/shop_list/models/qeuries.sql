@@ -1,21 +1,21 @@
--- Создание таблицы
+-- CREATE
 CREATE TABLE IF NOT EXISTS items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     bought INTEGER DEFAULT 0
 );
 
--- Добавление нового элемента
+-- INSERT
 INSERT INTO items (name, bought) VALUES (?, ?);
 
--- Получение всех элементов
+-- SELECT
 SELECT id, name, bought FROM items;
 
--- Обновление элемента
+-- UPDATE_NAME
 UPDATE items SET name = ? WHERE id = ?;
 
--- Удаление элемента
-DELETE FROM items WHERE id = ?;
-
--- Переключение статуса "куплено"
+-- UPDATE_BOUGHT
 UPDATE items SET bought = ? WHERE id = ?;
+
+-- DELETE
+DELETE FROM items WHERE id = ?;
