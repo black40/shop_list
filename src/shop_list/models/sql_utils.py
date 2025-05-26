@@ -16,4 +16,5 @@ def load_queries(filename: str) -> dict[str, str]:
         queries[key] = query
     return queries
 
+
 QUERIES = load_queries('src/shop_list/models/qeuries.sql')

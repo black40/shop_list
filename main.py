@@ -1,4 +1,3 @@
-import os
 import kivy
 from kivy.lang import Builder
 from kivy.utils import get_color_from_hex
