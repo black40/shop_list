@@ -54,11 +54,13 @@ class ItemRow(MDBoxLayout):
         self.add_widget(self.delete_button)
 
     def toggle_bought(self, checkbox, value):
-        self.db.toggle_item(self.item_id, int(value))
+        self.query = QUERIES['UPDATE_BOUGHT']
+        self.db.execute_query(self.query, (int(value), self.item_id))
         self.refresh_callback()
 
     def delete_item(self, *args):
-        self.db.delete_item(self.item_id)
+        self.query = QUERIES['DELETE']
+        self.db.execute_query(self.query, (self.item_id,))
         self.refresh_callback()
 
     def show_edit_dialog(self, *args):
@@ -75,9 +77,11 @@ class ItemRow(MDBoxLayout):
         self.dialog.open()
 
     def save_edit(self, *args):
+        self.query = QUERIES['UPDATE_NAME']
         new_name = self.text_field.text.strip()
         if new_name:
-            self.db.update_item(self.item_id, new_name)
+            self.db.execute_query(self.query, (new_name, self.item_id))
+            self.label.text = new_name
             self.dialog.dismiss()
             self.refresh_callback()
 
@@ -85,15 +89,10 @@ class ItemRow(MDBoxLayout):
 class Root(MDScreen):
     def __init__(self, *args, **kwargs):
         logger.info('Ініціалізація головного екрану')
-
-        if not os.path.exists(DB_FULL_PATH):
-            logger.warning(f'Базу даних не знайдено за шляхом: {DB_FULL_PATH}')
-            # За бажанням: створити або ініціалізувати нову БД тут
-        else:
-            logger.info(f'Базу даних знайдено: {DB_FULL_PATH}')
-
         self.db = Database(DB_FULL_PATH)
+        self.db.execute_query(QUERIES['CREATE'])  # Создать таблицу, если нет
         super().__init__(*args, **kwargs)
+        self.refresh_items()
         self.dialog = None
 
     def show_add_dialog(self):
@@ -113,16 +112,18 @@ class Root(MDScreen):
         logger.debug('Діалог додавання відкрито')
 
     def save_item(self, *args):
+        self.query = QUERIES['INSERT']
         logger.debug('Збереження елемента')
         name = self.text_field.text.strip()
         if name:
-            self.db.execute_query(name)
+            self.db.execute_query(self.query, (name, 0))
             self.dialog.dismiss()
             self.refresh_items()
 
     def refresh_items(self):
+        self.query = QUERIES['SELECT']
         self.ids.item_list.clear_widgets()
-        items = self.db.get_all_items()
+        items = self.db.get_all_items(self.query)
         for item in items:
             item_id, name, *rest = item
             bought = rest[0] if rest else 0
