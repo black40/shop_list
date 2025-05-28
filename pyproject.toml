@@ -20,6 +20,7 @@ packages = [{include = "shop_list", from = "src"}]
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
 mypy = "^1.15.0"
+pytest = "^8.3.5"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

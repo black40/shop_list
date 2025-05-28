@@ -14,7 +14,9 @@ from kivymd.uix.textfield import MDTextField
 from config import logger
 from config import DB_FULL_PATH
 from src.shop_list.models.db import Database
-from src.shop_list.models.sql_utils import load_queries
+from shop_list.utils.sql_utils import load_queries
+from src.shop_list.utils.theme_utils import save_theme, load_theme
+
 
 kivy.require('2.3.1')
 
@@ -58,6 +60,19 @@ class ItemRow(MDBoxLayout):
         self.refresh_callback()
 
     def delete_item(self, *args):
+        # Показываем диалог подтверждения
+        self.confirm_dialog = MDDialog(
+            title='Удалить элемент?',
+            text=f'Вы уверены, что хотите удалить "{self.name}"?',
+            buttons=[
+                MDFlatButton(text='Нет', on_release=lambda x: self.confirm_dialog.dismiss()),
+                MDFlatButton(text='Да', on_release=self.confirm_delete),
+            ],
+        )
+        self.confirm_dialog.open()
+
+    def confirm_delete(self, *args):
+        self.confirm_dialog.dismiss()
         self.query = QUERIES['DELETE']
         self.db.execute_query(self.query, (self.item_id,))
         self.refresh_callback()
@@ -132,10 +147,9 @@ class Root(MDScreen):
     def toggle_theme(self):
         new_theme = 'Dark' if self.theme_cls.theme_style == 'Light' else 'Light'
         new_palette = 'DeepPurple' if new_theme == 'Dark' else 'Blue'
-
         self.theme_cls.theme_style = new_theme
         self.theme_cls.primary_palette = new_palette
-
+        save_theme(new_theme, new_palette)
         self.bg_color = self.get_bg_color()
 
     def get_bg_color(self):
@@ -144,10 +158,14 @@ class Root(MDScreen):
 
 class ShopList(MDApp):
     def build(self) -> Root:
+        theme, palette = load_theme()
+        self.theme_cls.theme_style = theme
+        self.theme_cls.primary_palette = palette
         self.title = 'Shopping'
         logger.info('Загружаю файл .kv')
         Builder.load_file('src/shop_list/views/ui.kv')
-        return Root()
+        root = Root()
+        return root
 
 
 if __name__ == '__main__':
