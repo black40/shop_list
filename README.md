@@ -67,7 +67,9 @@ poetry run pytest
 
 ## Скриншоты
 
-_Добавьте сюда скриншоты приложения, если хотите._
+![Главное окно](images/main_screen.png)
+
+![Темная тема](images/dark_theme.png)
 
 ---
 
