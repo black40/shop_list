@@ -17,7 +17,6 @@ from src.shop_list.models.db import Database
 from shop_list.utils.sql_utils import load_queries
 from src.shop_list.utils.theme_utils import save_theme, load_theme
 
-
 kivy.require('2.3.1')
 
 
@@ -62,11 +61,11 @@ class ItemRow(MDBoxLayout):
     def delete_item(self, *args):
         # Показываем диалог подтверждения
         self.confirm_dialog = MDDialog(
-            title='Удалить элемент?',
-            text=f'Вы уверены, что хотите удалить "{self.name}"?',
+            title='Видаляєм?',
+            text=f'Впевнена, що видаляєм "{self.name}"?',
             buttons=[
-                MDFlatButton(text='Нет', on_release=lambda x: self.confirm_dialog.dismiss()),
-                MDFlatButton(text='Да', on_release=self.confirm_delete),
+                MDFlatButton(text='Ні-ні-ні', on_release=lambda x: self.confirm_dialog.dismiss()),
+                MDFlatButton(text='Так, видаляєм', on_release=self.confirm_delete),
             ],
         )
         self.confirm_dialog.open()
@@ -84,8 +83,8 @@ class ItemRow(MDBoxLayout):
             type='custom',
             content_cls=self.text_field,
             buttons=[
-                MDFlatButton(text='Отмена', on_release=lambda x: self.dialog.dismiss()),
-                MDFlatButton(text='Сохранить', on_release=self.save_edit),
+                MDFlatButton(text='Відміна', on_release=lambda x: self.dialog.dismiss()),
+                MDFlatButton(text='Зберегти', on_release=self.save_edit),
             ],
         )
         self.dialog.open()
@@ -111,14 +110,14 @@ class Root(MDScreen):
 
     def show_add_dialog(self):
         if self.dialog is None:
-            self.text_field = MDTextField(hint_text='product')
+            self.text_field = MDTextField(hint_text='тут пишемо щось')
             self.dialog = MDDialog(
-                title='Add product',
+                title='Добавити щось',
                 type='custom',
                 content_cls=self.text_field,
                 buttons=[
-                    MDFlatButton(text='Cancel', on_release=lambda x: self.dialog.dismiss()),
-                    MDFlatButton(text='Ok', on_release=self.save_item),
+                    MDFlatButton(text='Відміна', on_release=lambda x: self.dialog.dismiss()),
+                    MDFlatButton(text='Добавити', on_release=self.save_item),
                 ],
             )
         self.text_field.text = ''
